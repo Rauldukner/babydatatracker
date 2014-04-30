@@ -1,13 +1,13 @@
 <!doctype html>
 <html>
 <head>
-    <title>My Page</title>
+    <title>My Baby Data Tracker</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.css">
      
     <script src="http://code.jquery.com/jquery-1.8.2.min.js"></script>
     <script src="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.js"></script>
-    
+    <script src="lib/webSqlSync" type="application/x-javascript" charset="utf-8"></script>
     
 
 
@@ -83,6 +83,16 @@
 
     <a href="#win2" data-role="button" data-icon="star">Synchronise</a>
 
+ <div data-role="footer" data-id="foo1" data-position="fixed">
+    <div data-role="navbar">
+        <ul>
+            <li><a href="#summary" onclick"outputFeedAmount()">Summary</a></li>
+            
+            <li><a href="#export">Export Data</a></li>
+            
+        </ul>
+     </div>
+    </div>
 
         </div>
  
@@ -328,6 +338,49 @@
         
     </div>
 
+
+
+                        <!-- ***********SUMMARY PAGE*********** -->
+
+<div data-role="page" id="summary">
+ 
+        <div data-role="header" data-theme="b" >
+            <h2>Summary</h2>
+            <div data-role="navbar" >
+    <ul>
+        <li><a href="#pageone" data-transition="slide" data-direction="reverse">Back</a></li>
+        
+    </ul>
+            </div>
+            
+        </div>
+ 
+      <div id="summarylistholder">
+        <button id="showfeedamout" onclick="outputRecentFeeds()" value="Calculate 24 hour feed total"></button>
+  
+  <ul id="feedamountlist" data-role="listview" data-inset="true data-theme="e">
+  </ul>
+
+
+        <button id="showsleepamout" onclick="outputRecentSleep()" value="Calculate last sleep total"></button>
+  
+  <ul id="sleepamountlist" data-role="listview" data-inset="true data-theme="e">
+  </ul>
+
+
+        <button id="showNappyAmount" onclick="outputNappyAmount()" value="Calculate total nappy changes"></button>
+  
+  <ul id="nappyamountlist" data-role="listview" data-inset="true data-theme="e">
+  </ul>
+  
+</div>
+ 
+        
+            
+            
+        
+</div>
+
            
 
 
@@ -513,39 +566,75 @@
                                         //Creating the database 
 
             var mydb = openDatabase("babydata", "0.1", "A Database of baby info", 1024 * 1024);
+
+
             mydb.transaction(function(t) {
-                t.executeSql("CREATE TABLE IF NOT EXISTS feeds (id INTEGER PRIMARY KEY ASC, feedtime TIME, feeddate DATE, feedtype TEXT, endfeedtime TIME");
+                t.executeSql("CREATE TABLE IF NOT EXISTS feeds (id INTEGER PRIMARY KEY ASC, feedtime TIME, feeddate TIME, feedtype TEXT, endfeedtime TIME,  amount INTEGER, uname TEXT)");
 
             });
+
+            
 
             mydb.transaction(function(t) {
                 t.executeSql("CREATE TABLE IF NOT EXISTS profile (id INTEGER PRIMARY KEY ASC, email text, fname TEXT, lname TEXT, pword TEXT, child TEXT, uname TEXT)");
             });
 
+            mydb.transaction(function(t) {
+                t.executeSql("ALTER TABLE feeds ADD uname TEXT");
+
+            });
+
 
 
             mydb.transaction(function(t) {
-                t.executeSql("CREATE TABLE IF NOT EXISTS nappy (id INTEGER PRIMARY KEY ASC, ntype TEXT, ntime TIME, ndate DATE, observations TEXT)");
+                t.executeSql("CREATE TABLE IF NOT EXISTS nappy (id INTEGER PRIMARY KEY ASC, ntype TEXT, ntime TIME, ndate DATE, observations TEXT, uname TEXT)");
             });
 
         
             mydb.transaction(function(t) {
-                t.executeSql("CREATE TABLE IF NOT EXISTS sleep (id INTEGER PRIMARY KEY ASC, stime TIME, endstime TIME, sdate DATE, endsdate DATE)");
+                t.executeSql("CREATE TABLE IF NOT EXISTS sleep (id INTEGER PRIMARY KEY ASC, stime TIME, endstime TIME, sdate DATE, endsdate DATE, uname TEXT)");
             });
 
             mydb.transaction(function(t) {
-                t.executeSql("CREATE TABLE IF NOT EXISTS medication (id INTEGER PRIMARY KEY ASC, medtype TEXT, medtime TIME, meddate DATE, mednotes TEXT)");
+                t.executeSql("CREATE TABLE IF NOT EXISTS medication (id INTEGER PRIMARY KEY ASC, medtype TEXT, medtime TIME, meddate DATE, mednotes TEXT, uname TEXT)");
             });
 
             mydb.transaction(function(t) {
-                t.executeSql("CREATE TABLE IF NOT EXISTS milestones (id INTEGER PRIMARY KEY ASC, mstype TEXT, msdate DATE)");
+                t.executeSql("CREATE TABLE IF NOT EXISTS milestones (id INTEGER PRIMARY KEY ASC, mstype TEXT, msdate DATE, uname TEXT)");
             });
+
+
+
  
  
  
         } else {
             alert("WebSQL is not supported by your browser!");
         }
+
+                                                                                            // SYNCHRONISING TO MYSQL SERVER DATABASE
+
+         DBSYNC.initSync(TABLES_TO_SYNC, webSqlDb, sync_info, 'http://kevindunnedesignscom.ipagemysql.com', callBackEndInit, 'raulduke','sinead89');
+        TABLES_TO_SYNC = [
+            {tableName : 'feeds'},
+            {tableName : 'medication'}
+            {tableName : 'milestones'} 
+            {tableName : 'nappy'}
+            {tableName : 'profile'}
+            {tableName : 'sleep'}//if idName not specified, it will assume that it's "id"
+];
+       
+
+        DBSYNC.syncNow(callBackSyncProgress, function(result) {
+     if (result.syncOK === true) {
+         //Synchronized successfully
+     }
+});
+
+        callBackSyncProgress: function(message, percent, msgKey) {
+     $('#uiProgress').html(message+' ('+percent+'%)');
+},
+
  
                                                                             //Add Feeds to Database        
  
@@ -920,7 +1009,7 @@ function updateSleepList(transaction, results) {
  
         }
  
-                      //function to get the list of milestones from the database
+                      //function to get the list of sleeps from the database
  
         function outputSleep() {
             
@@ -993,6 +1082,130 @@ function updateSleepList(transaction, results) {
         }
  
         outputSleep();
+
+
+                                                                                                            //CALCULATE FEED AMOUNTS
+
+
+function outputRecentFeeds() {
+            
+            if (mydb) {
+                mydb.transaction(function(t) {
+                    t.executeSql("SELECT SUM(amount) AS total FROM feeds WHERE feeddate  > datetime('now', '-1 day') ", [], updateRecentFeedList);
+                });
+            } else {
+                alert("db not found, your browser does not support web sql!");
+            }
+        }
+
+function updateRecentFeedList(transaction, results) {
+            
+            var listitems = "";
+            
+            var listholder = document.getElementById("feedamountlist");
+ 
+            listholder.innerHTML = "";
+ 
+            var i;
+            for (i = 0; i < results.rows.length; i++) {
+                var row = results.rows.item(i);
+ 
+                listholder.innerHTML += "<li>" + "Your baby has had" + "&nbsp" + row.total + "&nbsp" + "ounces within the last 24 hours." ;
+            }
+ 
+        }
+
+
+
+                                                                                                        //CALCULATE SLEEP TOTAL TIME
+
+
+function outputRecentSleep() {
+            
+            if (mydb) {
+                mydb.transaction(function(t) {
+                    t.executeSql("SELECT (endstime - stime) AS STOTAL FROM sleep WHERE ID = (SELECT max(id) FROM sleep)", [], updateRecentSleepList);
+                });
+            } else {
+                alert("db not found, your browser does not support web sql!");
+            }
+        }
+
+function updateRecentSleepList(transaction, results) {
+            
+            var listitems = "";
+            
+            var listholder = document.getElementById("sleepamountlist");
+ 
+            listholder.innerHTML = "";
+ 
+            var i;
+            for (i = 0; i < results.rows.length; i++) {
+                var row = results.rows.item(i);
+ 
+                listholder.innerHTML += "<li>" + "Your baby's last sleep was for "  + row.STOTAL + "&nbsp" + "hours in total." ;
+            }
+ 
+        }
+
+
+                                                                                                            //CALCULATE RECENT NAPPY CHANGES
+
+function outputNappyAmount() {
+            
+            if (mydb) {
+                mydb.transaction(function(t) {
+                    t.executeSql("SELECT COUNT(*) AS nTOTAL FROM nappy WHERE ndate  > datetime('now', '-1 day') ", [], updateNappyAmount);
+                    
+                });
+            } else {
+                alert("db not found, your browser does not support web sql!");
+            }
+        }
+        
+
+
+ function outputDirtyAmount() {
+            
+            if (mydb) {
+                mydb.transaction(function(t) {
+                    t.executeSql("SELECT COUNT(*) AS dTOTAL FROM nappy WHERE ntype = ('Dirty')  AND ndate  > datetime('now', '-1 day') ", [], updateNappyAmount);
+                    
+                });
+            } else {
+                alert("db not found, your browser does not support web sql!");
+            }
+        }
+        
+
+
+
+
+
+
+function updateNappyAmount(transaction, results) {
+            
+            var listitems = "";
+            
+            var listholder = document.getElementById("nappyamountlist");
+ 
+            listholder.innerHTML = "";
+ 
+            var i;
+            for (i = 0; i < results.rows.length; i++) {
+                var row = results.rows.item(i);
+ 
+                listholder.innerHTML += "<li>" + "Your baby has had "  + row.nTOTAL + "&nbsp" + "nappy changes in the last 24 hours.";
+            }
+ 
+        }
+
+       
+
+        
+        
+
+
                       
  
        
