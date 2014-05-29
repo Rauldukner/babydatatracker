@@ -1,40 +1,22 @@
 <!doctype html>
+
+
 <html>
 <head>
     <title>My Baby Data Tracker</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.css">
+    <link rel="stylesheet" href="jquery.mobile-1.4.2/jquery.mobile-1.4.2.min.css">
      
-    <script src="http://code.jquery.com/jquery-1.8.2.min.js"></script>
-    <script src="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.js"></script>
-    <script src="lib/webSqlSync" type="application/x-javascript" charset="utf-8"></script>
+    <script src="lib/jquery-1.8.2.min.js"></script>
+    <script src="jquery.mobile-1.4.2/jquery.mobile-1.4.2.min.js"></script>
     
-
-
-
+   
+   
 
 </head>
 <body>
 
-                            <!-- LOGIN/SPLASH PAGE -->
-
-    <div data-role="page" id="splash" data-theme="b">
-
-        <div id="login">
-            <form name="form1" method="post" action="checklogin.php">
-                <label>Username</label>
-                <input type="text" id="uname" name="uname"><br>
-                <label>Password</label>
-                <input type="password" id="pword" name="pword"><br>
-                
-                 
-                <input type="submit" name="Submit" value="Login">
-                
-            </form>
-            <input type="button" value="Register">
-        </div>
-
-    </div>
+     
 
 
                             <!-- MENU PAGE -->
@@ -72,7 +54,7 @@
   <br>
   Start Time &nbsp&nbsp&nbsp&nbsp End Time &nbsp&nbsp&nbsp&nbsp Date &nbsp&nbsp&nbsp&nbsp Type &nbsp&nbsp&nbsp&nbsp Amount
   <br>
-<ul id="feedlist" data-role="listview" data-inset="true data-theme="e">
+<ul id="feedlist" width="80%" data-role="listview" data-inset="true" data-split-icon="minus" >
         </ul>
 </div>
 
@@ -81,14 +63,14 @@
 <br>
 <br>
 
-    <a href="#win2" data-role="button" data-icon="star">Synchronise</a>
+    
 
  <div data-role="footer" data-id="foo1" data-position="fixed">
     <div data-role="navbar">
         <ul>
             <li><a href="#summary" onclick"outputFeedAmount()">Summary</a></li>
             
-            <li><a href="#export">Export Data</a></li>
+            
             
         </ul>
      </div>
@@ -176,7 +158,7 @@
   <br>
   Time &nbsp&nbsp&nbsp&nbsp Date
   <br>
-<ul id="nappylist" data-role="listview" data-inset="true data-theme="e">
+<ul id="nappylist" data-role="listview" data-inset="true" >
         </ul>
 </div>
 
@@ -221,7 +203,7 @@
   <br>
   Asleep &nbsp&nbsp Awake
   <br>
-<ul id="sleeplist" data-role="listview" data-inset="true data-theme="e">
+<ul id="sleeplist" data-role="listview" data-inset="true" >
         </ul>
 </div>
 
@@ -271,7 +253,7 @@
   <br>
   Time &nbsp&nbsp&nbsp&nbsp Date
   <br>
-<ul id="medlist" data-role="listview" data-inset="true data-theme="e">
+<ul id="medlist" data-role="listview" data-inset="true" >
         </ul>
 </div>
 
@@ -322,7 +304,7 @@
   <br>
   Time &nbsp&nbsp&nbsp&nbsp Date
   <br>
-<ul id="milestonelist" data-role="listview" data-inset="true data-theme="e">
+<ul id="milestonelist" data-role="listview" data-inset="true" >
         </ul>
 </div>
 
@@ -358,19 +340,19 @@
       <div id="summarylistholder">
         <button id="showfeedamout" onclick="outputRecentFeeds()" value="Calculate 24 hour feed total"></button>
   
-  <ul id="feedamountlist" data-role="listview" data-inset="true data-theme="e">
+  <ul id="feedamountlist" data-role="listview" data-inset="true" >
   </ul>
 
 
         <button id="showsleepamout" onclick="outputRecentSleep()" value="Calculate last sleep total"></button>
   
-  <ul id="sleepamountlist" data-role="listview" data-inset="true data-theme="e">
+  <ul id="sleepamountlist" data-role="listview" data-inset="true" >
   </ul>
 
 
         <button id="showNappyAmount" onclick="outputNappyAmount()" value="Calculate total nappy changes"></button>
   
-  <ul id="nappyamountlist" data-role="listview" data-inset="true data-theme="e">
+  <ul id="nappyamountlist" data-role="listview" data-inset="true" >
   </ul>
   
 </div>
@@ -612,28 +594,11 @@
             alert("WebSQL is not supported by your browser!");
         }
 
-                                                                                            // SYNCHRONISING TO MYSQL SERVER DATABASE
 
-         DBSYNC.initSync(TABLES_TO_SYNC, webSqlDb, sync_info, 'http://kevindunnedesignscom.ipagemysql.com', callBackEndInit, 'raulduke','sinead89');
-        TABLES_TO_SYNC = [
-            {tableName : 'feeds'},
-            {tableName : 'medication'}
-            {tableName : 'milestones'} 
-            {tableName : 'nappy'}
-            {tableName : 'profile'}
-            {tableName : 'sleep'}//if idName not specified, it will assume that it's "id"
-];
-       
 
-        DBSYNC.syncNow(callBackSyncProgress, function(result) {
-     if (result.syncOK === true) {
-         //Synchronized successfully
-     }
-});
 
-        callBackSyncProgress: function(message, percent, msgKey) {
-     $('#uiProgress').html(message+' ('+percent+'%)');
-},
+
+
 
  
                                                                             //Add Feeds to Database        
@@ -650,7 +615,7 @@
             for (i = 0; i < results.rows.length; i++) {
                 var row = results.rows.item(i);
  
-                listholder.innerHTML += "<li>" + row.feedtime + "  &nbsp-&nbsp  " + row.endfeedtime + " &nbsp-&nbsp " + row.feeddate + " &nbsp-&nbsp " + row.feedtype + " &nbsp-&nbsp " + row.amount + "  (<a href='javascript:void(0);' onclick='deleteFeed(" + row.id + ");'>Delete</a>)";
+                listholder.innerHTML += "<li>" + row.feedtime + "  &nbsp-&nbsp  " + row.endfeedtime + " &nbsp-&nbsp " + row.feeddate + " &nbsp-&nbsp " + row.feedtype + " &nbsp-&nbsp " + row.amount  + "</li>";
             }
  
         }
@@ -784,7 +749,7 @@ function updateNappyList(transaction, results) {
             for (i = 0; i < results.rows.length; i++) {
                 var row = results.rows.item(i);
  
-                listholder.innerHTML += "<li>" + row.ntime + " - " + row.ndate + " - " + row.ntype + " &nbsp-&nbsp " + row.observations + "  (<a href='javascript:void(0);' onclick='deleteNappy(" + row.id + ");'>Delete</a>)";
+                listholder.innerHTML += "<li>" + row.ntime + " - " + row.ndate + " - " + row.ntype + " &nbsp-&nbsp " + row.observations + "</li>";
             }
  
         }
@@ -859,7 +824,7 @@ function updateMedsList(transaction, results) {
             for (i = 0; i < results.rows.length; i++) {
                 var row = results.rows.item(i);
  
-                listholder.innerHTML += "<li>" + row.medtype + " - " + row.medtime + " - " + row.meddate + "  (<a href='javascript:void(0);' onclick='deleteMeds(" + row.id + ");'>Delete</a>)";
+                listholder.innerHTML += "<li>" + row.medtype + " - " + row.medtime + " - " + row.meddate + "</li>";
             }
  
         }
@@ -932,7 +897,7 @@ function updateMilestoneList(transaction, results) {
             for (i = 0; i < results.rows.length; i++) {
                 var row = results.rows.item(i);
  
-                listholder.innerHTML += "<li>" + row.mstype + " - " + row.msdate  + "  (<a href='javascript:void(0);' onclick='deleteMilestone(" + row.id + ");'>Delete</a>)";
+                listholder.innerHTML += "<li>" + row.mstype + " - " + row.msdate  + "</li>";
             }
  
         }
@@ -1004,7 +969,7 @@ function updateSleepList(transaction, results) {
             for (i = 0; i < results.rows.length; i++) {
                 var row = results.rows.item(i);
  
-                listholder.innerHTML += "<li>" + row.stime + " - " + row.endstime  + " - " + row.sdate + "  (<a href='javascript:void(0);' onclick='deleteSleep(" + row.id + ");'>Delete</a>)";
+                listholder.innerHTML += "<li>" + row.stime + " - " + row.endstime  + " - " + row.sdate + "</li>";
             }
  
         }
